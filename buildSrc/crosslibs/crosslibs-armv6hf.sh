@@ -36,6 +36,7 @@
 # the Contents can be used to map a needed file to a package
 # the Package is used to check dependancies
 
+CROSSLIBS=$PWD/crosslibs
 DEST_VERSION=armv6hf-02
 
 confirm() {
@@ -72,8 +73,7 @@ getPackages() {
 
     PACKAGEDIR=`echo $REPO | tr /: -`-$DISTRO-$CATEGORY-$ARCH
 
-    cd $RT/..
-    OUT="$PWD/crosslibs/$TOOLCHAIN"
+    OUT="$CROSSLIBS/$TOOLCHAIN"
     OUTDAT=$OUT.data
 
     PACKAGELIST=$OUTDAT/$PACKAGEDIR/Packages
@@ -253,10 +253,11 @@ installLibs() {
 
     getPackages  \
         $DESTINATION \
-        http://archive.debian.org/debian/ wheezy main armhf \
+        http://ftp.debian.org/debian/ buster main armhf \
             libatk1.0-dev \
             libatk1.0-0 \
             libc6 \
+            libc6-dev \
             libc-bin \
             libgcc1 \
             libglib2.0-0 \
@@ -281,6 +282,7 @@ installLibs() {
             zlib1g-dev \
             libcairo2-dev \
             libcairo2 \
+            libpangocairo-1.0-0 \
             libfontconfig1 \
             libexpat1 \
             libfreetype6 \
@@ -301,6 +303,7 @@ installLibs() {
             libfreetype6-dev \
             libx11-dev \
             libxau-dev \
+            x11proto-dev \
             x11proto-core-dev \
             libxdmcp-dev \
             x11proto-input-dev \
@@ -334,13 +337,13 @@ installLibs() {
             libjbig0 \
             libgdk-pixbuf2.0-common \
             libglib2.0-0-refdbg \
-            libgstreamer0.10-dev \
-            libgstreamer0.10-0 \
+            libgstreamer1.0-dev \
+            libgstreamer1.0-0 \
             libxml2 \
             liblzma5 \
             libxml2-dev \
-            libgstreamer-plugins-base0.10-dev \
-            libgstreamer-plugins-base0.10-0 \
+            libgstreamer-plugins-base1.0-dev \
+            libgstreamer-plugins-base1.0-0 \
             liborc-0.4-0 \
             libgtk2.0-dev \
             libgtk2.0-0 \
@@ -361,7 +364,7 @@ installLibs() {
             libkeyutils1 \
             libkrb5support0 \
             libkrb5-3 \
-            libpango1.0-0 \
+            libpango-1.0-0 \
             libthai0 \
             libthai-data \
             libdatrie1 \
@@ -375,6 +378,7 @@ installLibs() {
             libxinerama1 \
             libxrandr2 \
             libpango1.0-dev \
+            libpangoft2-1.0-0 \
             libxft-dev \
             libxext-dev \
             x11proto-xext-dev \
@@ -408,6 +412,20 @@ installLibs() {
             libdirectfb-1.2-9 \
             libxslt1-dev \
             libxslt1.1 \
+            libegl1-mesa-dev \
+            libgles2 \
+            libgbm1 \
+            libgbm-dev \
+            libglvnd-dev \
+            libasound2 \
+            libasound2-dev \
+            libavcodec-dev \
+            libavcodec58 \
+            libavformat-dev \
+            libavformat58 \
+            libavutil-dev \
+            libavutil56 \
+            libswresample-dev \
             libudev-dev \
             libudev0
 
@@ -422,15 +440,14 @@ installCrossCompiler() {
     echo
     echo Fetching and unpacking compiler in $CROSSLIBS
     echo
-    echo NOTE: if you use a proxy server then this download will probably fail. In that
-    echo case you need to set a value for the environment variable https_proxy and run
-    echo this script again.
+    /bin/sh -c "sudo apt-get install gcc-arm-linux-gnueabihf"
+}
+
+installCrossLinker() {
     echo
-    COMPILER_URL=https://launchpad.net/linaro-toolchain-unsupported/trunk/2012.09/+download/gcc-linaro-arm-linux-gnueabihf-raspbian-2012.09-20120921_linux.tar.bz2
-    CMD="wget $COMPILER_URL -O - | tar jx -C $CROSSLIBS"
-    echo $CMD
+    echo Fetching and unpacking linker in $CROSSLIBS
     echo
-    /bin/sh -c "$CMD"
+    /bin/sh -c "sudo apt-get install g++-arm-linux-gnueabihf"
 }
 
 SCRIPTDIR=`dirname $0`
@@ -438,16 +455,7 @@ if [[ ! "SCRIPTDIRRT" =~ ^/ ]]
 then
     SCRIPTDIR="$PWD/$SCRIPTDIR"
     fi
-RT="$SCRIPTDIR/../.."
 
-echo Using OpenJFX working directory at $RT
-confirm()
-if [[ $CONFIRMED -eq 0 ]]; then
-    echo -n "Enter the location of the OpenJFX working directory: "
-    read RT
-fi
-
-CROSSLIBS=$RT/../crosslibs
 echo Using crosslibs directory $CROSSLIBS
 
 mkdir -p $CROSSLIBS || exit 1
@@ -455,14 +463,17 @@ mkdir -p $CROSSLIBS || exit 1
 PILIBS=$CROSSLIBS/$DEST_VERSION
 
 checkReinstall $PILIBS
-if [[ ! -d $PILIBS ]]; then
+#if [[ ! -d $PILIBS ]]; then
     installLibs
-fi
+#fi
 
-CROSSCOMPILER=$CROSSLIBS/gcc-linaro-arm-linux-gnueabihf-raspbian-2012.09-20120921_linux
-checkReinstall $CROSSCOMPILER
-if [[ ! -d $CROSSCOMPILER ]]; then
+CROSSCOMPILER=/usr/bin/arm-linux-gnueabihf-gcc
+if [[ ! -e $CROSSCOMPILER ]]; then
     installCrossCompiler
+fi
+CROSSLINKER=/usr/bin/arm-linux-gnueabihf-g++
+if [[ ! -e $CROSSLINKER ]]; then
+    installCrossLinker
 fi
 
 echo

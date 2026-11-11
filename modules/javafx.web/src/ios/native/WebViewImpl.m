@@ -238,7 +238,7 @@ jstring createJString(JNIEnv *env, NSString *nsStr) {
     loadingLabel.hidden = YES;
     [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
     __block NSString *resultString = nil;
-    [wv evaluateJavaScript:@"document.documentElement.innerHTML" completionHandler:^(id result, NSError *error) {
+    [wv evaluateJavaScript:@"new XMLSerializer().serializeToString(document)" completionHandler:^(id result, NSError *error) {
         if (error == nil) {
             if (result != nil) {
                 resultString = [NSString stringWithFormat:@"%@", result];

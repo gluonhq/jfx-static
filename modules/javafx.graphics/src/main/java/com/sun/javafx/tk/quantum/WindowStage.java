@@ -273,6 +273,7 @@ public class WindowStage extends GlassStage {
                 newScene.updateSceneState();
                 return null;
             });
+            if (PlatformUtil.isAndroid()) requestFocus();
         } else {
             QuantumToolkit.runWithRenderLock(() -> {
                 // platformWindow can be null here, if this window is owned,
